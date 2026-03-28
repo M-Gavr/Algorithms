@@ -1,0 +1,9 @@
+3
+Vasya
+Petya
+Masha
+4
+3:0 Vasya
+3:2 Petya
+4:2 Masha
+7:2 Masha
