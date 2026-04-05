@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <fstream>
+#include <iostream>
 #include <vector>
 #include <algorithm>
 #include <iostream>
@@ -32,6 +33,20 @@ struct SubtreeInfo {
     }
 };
 
+ostream& operator<<(ostream& os, const SubtreeInfo& info) {
+    os << "SubtreeInfo {\n";
+    os << "  min: " << info.min << "\n";
+    os << "  max: " << info.max << "\n";
+    os << "  l_cur: " << info.l_cur << "\n";
+    os << "  cur_r: " << info.cur_r << "\n";
+    os << "  l_r: " << info.l_r << "\n";
+    os << "  min_i: " << info.min_i << "\n";
+    os << "  max_i: " << info.max_i << "\n";
+    os << "  cur_i: " << info.cur_i << "\n";
+    os << "}";
+    return os;
+}
+
 struct Vertex {
     int32_t neighbors[3];
     int32_t weights[3];
@@ -53,7 +68,9 @@ struct GraphData {
     vector<vector<int32_t>> outer_edge_weight;
     vector<int32_t> outer_cycle_order;
     vector<int32_t> pos_in_cycle;
-    vector<pair<int32_t, int32_t>> lr;  // для восстановления ответа lr[v] = {левый_лист, правый_лист}
+    vector<pair<int32_t, int32_t>> lr;  // для восстановления ответа lr[v] = {левый_ребенок, правый_ребенок}
+    vector<SubtreeInfo> info;
+
 
     GraphData(int32_t n_val, int32_t k_val)
         : n(n_val), k(k_val),
@@ -62,7 +79,8 @@ struct GraphData {
           outer_edge_weight(k_val, vector<int32_t>(k_val, -1)),
           outer_cycle_order(k_val),
           pos_in_cycle(n_val, -1),
-          lr(n_val) {}
+          lr(n_val),
+          info() {}
 };
 
 // Вспомогательные функции (принимают данные по ссылке)
@@ -114,6 +132,7 @@ SubtreeInfo dfs(GraphData& g, const int32_t v, const int32_t parent) {
 
     if (inner_neighbors.empty()) {
         g.lr[v] = {v, v};
+        g.info.push_back({g.pos_in_cycle[v], g.pos_in_cycle[v], 0, 0, 0, v, v, v});
         return {g.pos_in_cycle[v], g.pos_in_cycle[v], 0, 0, 0, v, v, v};
     }
 
@@ -142,6 +161,7 @@ SubtreeInfo dfs(GraphData& g, const int32_t v, const int32_t parent) {
     const int32_t l_r = l.l_cur + r.cur_r + get_inner_edge_weight(g, v, l.cur_i) +
                   get_inner_edge_weight(g, v, r.cur_i);
 
+    g.info.push_back({l.min, r.max, l_cur, cur_r, l_r, l.min_i, r.max_i, v});
     return {l.min, r.max, l_cur, cur_r, l_r, l.min_i, r.max_i, v};
 }
 
@@ -253,6 +273,24 @@ int main() {
     }
 
     out << '\n';
+
+
+    /*
+    out << '\n';
+    for (int32_t i = 0; i < k; ++i) {
+        out << g.outer_cycle_order[i] << ' ';
+    }
+    out << '\n';
+
+    for (int32_t i = 0; i < n; ++i) {
+        out << g.pos_in_cycle[i] << ' ';
+    }
+    out << '\n';
+
+    for (int32_t i = 0; i < n; ++i) {
+        out << g.info[i] << '\n';
+    }
+    */
 
     in.close();
     out.close();
